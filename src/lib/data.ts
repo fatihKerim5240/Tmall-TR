@@ -109,7 +109,7 @@ export const HERO_BANNERS: Banner[] = [
     image: "https://picsum.photos/seed/tmall1/1200/400",
     title: "Yaz Koleksiyonu %70'e Varan İndirim",
     subtitle: "Sezon sonu fırsatlarını kaçırma",
-    href: "/kampanya/yaz",
+    href: "/arama?q=yaz",
     bgColor: "#FF0036",
   },
   {
@@ -117,7 +117,7 @@ export const HERO_BANNERS: Banner[] = [
     image: "https://picsum.photos/seed/tmall2/1200/400",
     title: "Elektronik Günleri",
     subtitle: "Telefon, bilgisayar, tablet fırsatları",
-    href: "/kampanya/elektronik",
+    href: "/arama?q=elektronik",
     bgColor: "#1A1A2E",
   },
   {
@@ -125,7 +125,7 @@ export const HERO_BANNERS: Banner[] = [
     image: "https://picsum.photos/seed/tmall3/1200/400",
     title: "Ev & Mobilya Festivali",
     subtitle: "Evinizi yenileyin, ödemeyi sonra yapın",
-    href: "/kampanya/ev",
+    href: "/arama?q=mobilya",
     bgColor: "#2D6A4F",
   },
   {
@@ -133,7 +133,7 @@ export const HERO_BANNERS: Banner[] = [
     image: "https://picsum.photos/seed/tmall4/1200/400",
     title: "Güzellik Dünyası",
     subtitle: "Orijinal markalar, uygun fiyatlar",
-    href: "/kampanya/kozmetik",
+    href: "/arama?q=kozmetik",
     bgColor: "#9B2335",
   },
 ];
