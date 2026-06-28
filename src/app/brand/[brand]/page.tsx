@@ -1,27 +1,35 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { ChevronRight, Store } from "lucide-react";
+import { ChevronRight, Store, Tag } from "lucide-react";
 import { PageWrapper } from "@/components/shared/PageWrapper";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { getProductsByBrand, BRANDS } from "@/lib/products";
+import { NAV_CATEGORIES } from "@/lib/data";
 
 interface Props {
   params: Promise<{ brand: string }>;
+  searchParams: Promise<{ category?: string }>;
 }
 
 export async function generateStaticParams() {
   return Object.keys(BRANDS).map((brand) => ({ brand }));
 }
 
-export default async function BrandPage({ params }: Props) {
+export default async function BrandPage({ params, searchParams }: Props) {
   const { brand } = await params;
+  const { category } = await searchParams;
+
   const brandData = BRANDS[brand];
+  if (!brandData) notFound();
 
-  if (!brandData) {
-    notFound();
-  }
+  const allBrandProducts = getProductsByBrand(brand);
+  const products = category
+    ? allBrandProducts.filter((p) => p.category === category)
+    : allBrandProducts;
 
-  const products = getProductsByBrand(brand);
+  const categoryData = category
+    ? NAV_CATEGORIES.find((c) => c.id === category)
+    : null;
 
   return (
     <PageWrapper>
@@ -43,34 +51,82 @@ export default async function BrandPage({ params }: Props) {
           <p className="text-white/70 text-sm mt-1 max-w-md text-center">
             {brandData.description}
           </p>
+          {categoryData && (
+            <span className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold text-white">
+              <Tag size={11} />
+              {categoryData.name}
+            </span>
+          )}
         </div>
       </div>
 
       <div className="max-w-[1200px] mx-auto px-0 pb-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-4 px-1">
-          <a href="/" className="hover:text-[#FF0036] transition-colors">Anasayfa</a>
+          <a href="/" className="hover:text-[#FF0036] transition-colors">
+            Anasayfa
+          </a>
           <ChevronRight size={12} />
-          <a href="/markalar" className="hover:text-[#FF0036] transition-colors">Markalar</a>
+          <a href="/markalar" className="hover:text-[#FF0036] transition-colors">
+            Markalar
+          </a>
+          {categoryData && (
+            <>
+              <ChevronRight size={12} />
+              <a
+                href={`/markalar?category=${category}`}
+                className="hover:text-[#FF0036] transition-colors"
+              >
+                {categoryData.name}
+              </a>
+            </>
+          )}
           <ChevronRight size={12} />
           <span className="text-gray-600 font-medium">{brandData.name}</span>
         </nav>
 
+        {/* Kategori filtresi aktifse bilgilendirme + diğer kategoriler */}
+        {categoryData && (
+          <div className="flex items-center justify-between bg-white rounded-lg border border-gray-100 px-4 py-3 mb-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span className="w-2 h-2 bg-[#FF0036] rounded-full" />
+              <span>
+                <span className="font-semibold text-gray-800">
+                  {categoryData.name}
+                </span>{" "}
+                kategorisindeki{" "}
+                <span className="font-semibold text-[#FF0036]">
+                  {brandData.name}
+                </span>{" "}
+                ürünleri
+              </span>
+            </div>
+            <a
+              href={`/brand/${brand}`}
+              className="text-xs text-gray-400 hover:text-[#FF0036] transition-colors"
+            >
+              Tüm ürünleri gör →
+            </a>
+          </div>
+        )}
+
         {/* Sıralama çubuğu */}
         <div className="bg-white rounded-lg border border-gray-100 px-4 py-3 flex items-center gap-3 mb-4">
           <span className="text-sm text-gray-500 mr-2">Sırala:</span>
-          {["Önerilen", "En Çok Satan", "En Düşük Fiyat", "En Yüksek Fiyat"].map((opt, i) => (
-            <button
-              key={opt}
-              className={`text-sm px-3 py-1 rounded transition-colors ${
-                i === 0
-                  ? "bg-[#FF0036] text-white"
-                  : "text-gray-600 hover:text-[#FF0036] hover:bg-red-50"
-              }`}
-            >
-              {opt}
-            </button>
-          ))}
+          {["Önerilen", "En Çok Satan", "En Düşük Fiyat", "En Yüksek Fiyat"].map(
+            (opt, i) => (
+              <button
+                key={opt}
+                className={`text-sm px-3 py-1 rounded transition-colors ${
+                  i === 0
+                    ? "bg-[#FF0036] text-white"
+                    : "text-gray-600 hover:text-[#FF0036] hover:bg-red-50"
+                }`}
+              >
+                {opt}
+              </button>
+            )
+          )}
           <span className="ml-auto text-xs text-gray-400">
             {products.length} ürün
           </span>
@@ -86,17 +142,31 @@ export default async function BrandPage({ params }: Props) {
           <div className="bg-white rounded-lg border border-gray-100 p-16 text-center">
             <div className="text-5xl mb-4">🏷️</div>
             <h3 className="text-lg font-bold text-gray-700 mb-2">
-              {brandData.name} ürünleri yakında
+              {categoryData
+                ? `${categoryData.name} kategorisinde ${brandData.name} ürünü bulunamadı`
+                : `${brandData.name} ürünleri yakında`}
             </h3>
             <p className="text-sm text-gray-400 mb-6">
-              Bu markaya ait ürünler çok yakında eklenecek.
+              {categoryData
+                ? "Diğer kategorilerdeki ürünleri görmek için tüm ürünler sayfasını ziyaret edin."
+                : "Bu markaya ait ürünler çok yakında eklenecek."}
             </p>
-            <a
-              href="/markalar"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF0036] text-white rounded-lg text-sm font-semibold hover:bg-[#CC0029] transition-colors"
-            >
-              Tüm Markalar
-            </a>
+            <div className="flex items-center justify-center gap-3">
+              {categoryData && (
+                <a
+                  href={`/brand/${brand}`}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF0036] text-white rounded-lg text-sm font-semibold hover:bg-[#CC0029] transition-colors"
+                >
+                  Tüm {brandData.name} Ürünleri
+                </a>
+              )}
+              <a
+                href="/markalar"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors"
+              >
+                Tüm Markalar
+              </a>
+            </div>
           </div>
         )}
       </div>
