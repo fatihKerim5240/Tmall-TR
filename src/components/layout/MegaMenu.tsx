@@ -33,9 +33,10 @@ export function MegaMenu() {
               {/* Sol: Kategori Listesi */}
               <div className="w-[200px] border-r border-gray-100 flex-shrink-0">
                 {NAV_CATEGORIES.map((cat) => (
-                  <div
+                  <a
                     key={cat.id}
-                    className={`flex items-center justify-between px-4 py-2.5 cursor-pointer text-sm transition-colors ${
+                    href={cat.href}
+                    className={`flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${
                       activeCategory.id === cat.id
                         ? "bg-red-50 text-[#FF0036] font-semibold border-l-2 border-[#FF0036]"
                         : "text-gray-700 hover:bg-gray-50 hover:text-[#FF0036]"
@@ -44,7 +45,7 @@ export function MegaMenu() {
                   >
                     <span>{cat.name}</span>
                     <ChevronRight size={14} className="text-gray-400" />
-                  </div>
+                  </a>
                 ))}
               </div>
 
@@ -63,14 +64,14 @@ export function MegaMenu() {
                         {sub.name}
                       </a>
                       <div className="flex flex-wrap gap-1">
-                        {sub.items.map((item) => (
+                        {sub.items.map((item, idx) => (
                           <a
                             key={item}
-                            href="#"
+                            href={sub.href}
                             className="text-xs text-gray-500 hover:text-[#FF0036] transition-colors"
                           >
                             {item}
-                            {sub.items.indexOf(item) < sub.items.length - 1 && (
+                            {idx < sub.items.length - 1 && (
                               <span className="text-gray-300 ml-1">·</span>
                             )}
                           </a>

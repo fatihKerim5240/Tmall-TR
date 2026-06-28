@@ -985,3 +985,37 @@ export function getRelatedProducts(product: Product, limit = 4): Product[] {
     (p) => p.id !== product.id && (p.category === product.category || p.brand === product.brand)
   ).slice(0, limit);
 }
+
+export function getFlashProducts(): Product[] {
+  return ALL_PRODUCTS.filter((p) => p.isFlash);
+}
+
+export function getBestSellers(): Product[] {
+  return [...ALL_PRODUCTS].sort((a, b) => (b.sold ?? 0) - (a.sold ?? 0));
+}
+
+export function getTopDiscounts(): Product[] {
+  return [...ALL_PRODUCTS]
+    .filter((p) => p.discount !== undefined)
+    .sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0));
+}
+
+export function getPremiumProducts(): Product[] {
+  return [...ALL_PRODUCTS]
+    .filter((p) => p.price >= 8000)
+    .sort((a, b) => b.price - a.price);
+}
+
+export function getNewArrivals(): Product[] {
+  return [...ALL_PRODUCTS].reverse();
+}
+
+export function getCampaignProducts(): Product[] {
+  return [...ALL_PRODUCTS]
+    .filter((p) => (p.discount ?? 0) >= 20)
+    .sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0));
+}
+
+export function getAllProductsMixed(): Product[] {
+  return [...ALL_PRODUCTS].sort(() => Math.random() - 0.5);
+}
