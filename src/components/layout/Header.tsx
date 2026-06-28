@@ -1,5 +1,6 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import {
   Search,
   ShoppingCart,
@@ -10,6 +11,9 @@ import {
   Camera,
   Mic,
 } from "lucide-react";
+import { useCartStore } from "@/store/useCartStore";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
+import { useNotificationsStore } from "@/store/useNotificationsStore";
 
 const HOT_SEARCHES = [
   "iPhone 15",
@@ -23,7 +27,18 @@ const HOT_SEARCHES = [
 export function Header() {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const cartItems = useCartStore((s) => s.items);
+  const favItems = useFavoritesStore((s) => s.items);
+  const notifications = useNotificationsStore((s) => s.notifications);
+
+  useEffect(() => setMounted(true), []);
+
+  const cartCount = mounted ? cartItems.reduce((s, i) => s + i.quantity, 0) : 0;
+  const favCount = mounted ? favItems.length : 0;
+  const unreadCount = mounted ? notifications.filter((n) => !n.read).length : 0;
 
   return (
     <header className="bg-[#FF0036] sticky top-0 z-50 shadow-md">
@@ -124,22 +139,54 @@ export function Header() {
         {/* Sağ İkonlar */}
         <div className="flex items-center gap-1 flex-shrink-0">
           <NavIcon href="/auth/login" icon={<User size={20} />} label="Hesabım" />
-          <NavIcon href="/favoriler" icon={<Heart size={20} />} label="Favoriler" />
-          <NavIcon href="/bildirimler" icon={<Bell size={20} />} label="Bildirimler" />
+
+          {/* Favoriler */}
+          <Link
+            href="/favorilerim"
+            className="flex flex-col items-center text-white hover:text-white/80 transition-colors px-2.5 py-1 relative"
+          >
+            <div className="relative">
+              <Heart size={20} />
+              {favCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#FAAD14] text-black text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                  {favCount > 99 ? "99+" : favCount}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] mt-0.5 whitespace-nowrap">Favoriler</span>
+          </Link>
+
+          {/* Bildirimler */}
+          <Link
+            href="/bildirimler"
+            className="flex flex-col items-center text-white hover:text-white/80 transition-colors px-2.5 py-1 relative"
+          >
+            <div className="relative">
+              <Bell size={20} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#FF6600] text-white text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] mt-0.5 whitespace-nowrap">Bildirimler</span>
+          </Link>
 
           {/* Sepet */}
-          <a
-            href="/sepet"
+          <Link
+            href="/sepetim"
             className="flex flex-col items-center text-white hover:text-white/80 transition-colors px-3 relative"
           >
             <div className="relative">
               <ShoppingCart size={22} />
-              <span className="absolute -top-2 -right-2 bg-[#FAAD14] text-black text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
-                3
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#FAAD14] text-black text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
             </div>
             <span className="text-[10px] mt-0.5 whitespace-nowrap">Sepetim</span>
-          </a>
+          </Link>
         </div>
       </div>
     </header>

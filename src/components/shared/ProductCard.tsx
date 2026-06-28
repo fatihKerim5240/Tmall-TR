@@ -1,8 +1,11 @@
 "use client";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Star, ShoppingCart, Heart } from "lucide-react";
 import { Product } from "@/types";
+import { useCartStore } from "@/store/useCartStore";
+import { useFavoritesStore } from "@/store/useFavoritesStore";
 
 interface ProductCardProps {
   product: Product;
@@ -10,6 +13,30 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product: p, className = "" }: ProductCardProps) {
+  const [mounted, setMounted] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const addItem = useCartStore((s) => s.addItem);
+  const { items: favItems, toggle } = useFavoritesStore();
+
+  useEffect(() => setMounted(true), []);
+
+  const isFaved = mounted && favItems.some((f) => f.id === p.id);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(p);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1800);
+  };
+
+  const handleToggleFav = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggle(p);
+  };
+
   return (
     <Link
       href={`/urun/${p.id}`}
@@ -33,16 +60,21 @@ export function ProductCard({ product: p, className = "" }: ProductCardProps) {
           </span>
         )}
         {p.badge && p.discount && (
-          <span className="absolute top-2 right-2 bg-[#FF6600] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+          <span className="absolute top-2 right-10 bg-[#FF6600] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
             {p.badge}
           </span>
         )}
         <button
-          className="absolute bottom-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 z-10"
-          onClick={(e) => e.preventDefault()}
-          aria-label="Favorilere ekle"
+          className={`absolute bottom-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all z-10 ${
+            isFaved ? "opacity-100" : ""
+          }`}
+          onClick={handleToggleFav}
+          aria-label={isFaved ? "Favorilerden çıkar" : "Favorilere ekle"}
         >
-          <Heart size={14} className="text-gray-400 hover:text-[#FF0036] transition-colors" />
+          <Heart
+            size={14}
+            className={isFaved ? "fill-[#FF0036] text-[#FF0036]" : "text-gray-400 hover:text-[#FF0036] transition-colors"}
+          />
         </button>
       </div>
 
@@ -91,11 +123,15 @@ export function ProductCard({ product: p, className = "" }: ProductCardProps) {
         <p className="text-[11px] text-gray-400 truncate">{p.shop}</p>
 
         <button
-          className="mt-1 w-full py-2 bg-[#FF0036] hover:bg-[#CC0029] active:bg-[#AA0020] text-white text-sm font-semibold rounded transition-colors flex items-center justify-center gap-1.5"
-          onClick={(e) => e.preventDefault()}
+          className={`mt-1 w-full py-2 text-white text-sm font-semibold rounded transition-colors flex items-center justify-center gap-1.5 ${
+            added
+              ? "bg-green-500 active:bg-green-600"
+              : "bg-[#FF0036] hover:bg-[#CC0029] active:bg-[#AA0020]"
+          }`}
+          onClick={handleAddToCart}
         >
           <ShoppingCart size={14} />
-          Sepete Ekle
+          {added ? "Eklendi!" : "Sepete Ekle"}
         </button>
       </div>
     </Link>
