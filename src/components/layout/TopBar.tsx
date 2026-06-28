@@ -26,11 +26,11 @@ export function TopBar() {
 
         <div className="flex items-center gap-4">
           <span className="text-[#ccc]">Merhaba,</span>
-          <a href="/giris" className="hover:text-white text-[#FF0036] font-medium">
+          <a href="/auth/login" className="hover:text-white text-[#FF0036] font-medium">
             Giriş Yap
           </a>
           <span>|</span>
-          <a href="/kayit" className="hover:text-white">
+          <a href="/auth/register" className="hover:text-white">
             Üye Ol
           </a>
           <span>|</span>

@@ -123,7 +123,7 @@ export function Header() {
 
         {/* Sağ İkonlar */}
         <div className="flex items-center gap-1 flex-shrink-0">
-          <NavIcon href="/hesabim" icon={<User size={20} />} label="Hesabım" />
+          <NavIcon href="/auth/login" icon={<User size={20} />} label="Hesabım" />
           <NavIcon href="/favoriler" icon={<Heart size={20} />} label="Favoriler" />
           <NavIcon href="/bildirimler" icon={<Bell size={20} />} label="Bildirimler" />
 

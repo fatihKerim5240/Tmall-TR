@@ -32,6 +32,7 @@ export interface Product {
   id: string;
   name: string;
   image: string;
+  images?: string[];
   price: number;
   originalPrice?: number;
   discount?: number;
@@ -39,9 +40,30 @@ export interface Product {
   shopLogo?: string;
   sold?: number;
   rating?: number;
+  ratingCount?: number;
   isFlash?: boolean;
   flashEndTime?: string;
   badge?: string;
+  category?: string;
+  brand?: string;
+  description?: string;
+  stock?: number;
+  variants?: ProductVariant[];
+}
+
+export interface ProductVariant {
+  name: string;
+  options: string[];
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  logo?: string;
+  href: string;
+  description?: string;
+  productCount?: number;
+  category?: string;
 }
 
 export interface FlashSale {
