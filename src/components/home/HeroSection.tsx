@@ -25,11 +25,10 @@ export function HeroSection() {
   const banner = HERO_BANNERS[current];
 
   return (
-    <div className="max-w-[1200px] mx-auto py-3 flex gap-3">
+    <div className="max-w-[1200px] mx-auto py-3 px-4 flex gap-3">
       {/* Slider */}
       <div
-        className="relative flex-1 rounded-lg overflow-hidden"
-        style={{ height: "380px" }}
+        className="relative flex-1 rounded-lg overflow-hidden h-[220px] md:h-[340px] lg:h-[380px]"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
@@ -98,10 +97,9 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Sağ Panel — Hızlı Kategoriler */}
+      {/* Sağ Panel — Hızlı Kategoriler (masaüstü) */}
       <div
-        className="w-[180px] flex-shrink-0 bg-white rounded-lg overflow-hidden flex flex-col"
-        style={{ height: "380px" }}
+        className="hidden md:flex w-[160px] lg:w-[180px] flex-shrink-0 bg-white rounded-lg overflow-hidden flex-col h-[340px] lg:h-[380px]"
       >
         <div className="bg-[#FF0036] text-white text-xs font-bold px-3 py-2 text-center">
           KATEGORİLER

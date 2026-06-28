@@ -211,10 +211,10 @@ export function FlashSaleSection() {
   const { h, m, s } = useCountdown();
 
   return (
-    <section className="max-w-[1200px] mx-auto mb-4">
+    <section className="max-w-[1200px] mx-auto mb-4 px-4">
       <div className="bg-white rounded-lg overflow-hidden shadow-sm">
         {/* Başlık */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 md:px-5 py-3 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 bg-[#FF0036] text-white px-3 py-1.5 rounded font-black text-sm animate-pulse-subtle">
               <Zap size={14} className="fill-white" />

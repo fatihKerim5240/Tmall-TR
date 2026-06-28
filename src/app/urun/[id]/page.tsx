@@ -156,9 +156,9 @@ function PDPContent({
     : null;
 
   return (
-    <div className="max-w-[1200px] mx-auto py-4">
+    <div className="max-w-[1200px] mx-auto py-4 px-4">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-4 px-1">
+      <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-4">
         <Link href="/" className="hover:text-[#FF0036] transition-colors">Anasayfa</Link>
         <ChevronRight size={12} />
         {p.category && (
@@ -173,8 +173,8 @@ function PDPContent({
       </nav>
 
       {/* ── Ana panel ── */}
-      <div className="bg-white rounded-xl border border-gray-100 p-6 mb-4 shadow-sm">
-        <div className="grid grid-cols-[320px,1fr,290px] gap-8">
+      <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-6 mb-4 shadow-sm">
+        <div className="flex flex-col lg:grid lg:grid-cols-[300px,1fr,280px] gap-6 lg:gap-8">
 
           {/* ── Sol: Görsel galerisi ── */}
           <div>
@@ -519,7 +519,7 @@ function PDPContent({
             <span className="w-1 h-5 bg-[#FF0036] rounded-full block" />
             <h2 className="font-black text-gray-800">Benzer Ürünler</h2>
           </div>
-          <div className="grid grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {related.map((rp) => (
               <ProductCard key={rp.id} product={rp} />
             ))}

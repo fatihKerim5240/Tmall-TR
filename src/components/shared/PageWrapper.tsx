@@ -10,7 +10,7 @@ export function PageWrapper({ children }: { children: React.ReactNode }) {
       <MegaMenu />
       <main>{children}</main>
       <footer className="bg-[#222] text-gray-400 text-xs mt-8">
-        <div className="max-w-[1200px] mx-auto py-10 grid grid-cols-5 gap-8">
+        <div className="max-w-[1200px] mx-auto py-8 md:py-10 px-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 md:gap-8">
           {["Tmall Hakkında", "Alıcı Hizmetleri", "Satıcı Hizmetleri", "Ödeme & Güvenlik", "İletişim"].map(
             (title) => (
               <div key={title}>
@@ -26,7 +26,7 @@ export function PageWrapper({ children }: { children: React.ReactNode }) {
             )
           )}
         </div>
-        <div className="border-t border-gray-700 py-4 text-center text-gray-500">
+        <div className="border-t border-gray-700 py-4 text-center text-gray-500 px-4">
           © 2025 Tmall TR. Tüm hakları saklıdır.
         </div>
       </footer>

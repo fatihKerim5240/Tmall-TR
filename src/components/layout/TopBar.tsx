@@ -10,8 +10,8 @@ const links = [
 
 export function TopBar() {
   return (
-    <div className="bg-[#222] text-[#999] text-xs">
-      <div className="max-w-[1200px] mx-auto flex items-center justify-between h-8 px-0">
+    <div className="bg-[#222] text-[#999] text-xs hidden md:block">
+      <div className="max-w-[1200px] mx-auto flex items-center justify-between h-8 px-4">
         <div className="flex items-center gap-4">
           {links.map((l) => (
             <a

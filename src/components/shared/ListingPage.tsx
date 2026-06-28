@@ -53,7 +53,7 @@ export function ListingPage({
         <p className="text-white/50 text-xs mt-3">{products.length} ürün</p>
       </div>
 
-      <div className="max-w-[1200px] mx-auto pb-10">
+      <div className="max-w-[1200px] mx-auto pb-10 px-4">
         {/* Breadcrumb */}
         {breadcrumb && breadcrumb.length > 0 && (
           <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-4 px-1">
@@ -76,12 +76,12 @@ export function ListingPage({
         )}
 
         {/* Sıralama çubuğu */}
-        <div className="bg-white rounded-lg border border-gray-100 px-4 py-3 flex items-center gap-2 mb-4 flex-wrap">
+        <div className="bg-white rounded-lg border border-gray-100 px-4 py-3 flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar">
           <span className="text-sm text-gray-500 mr-1 flex-shrink-0">Sırala:</span>
           {sortOptions.map((opt, i) => (
             <button
               key={opt}
-              className={`text-sm px-3 py-1 rounded transition-colors whitespace-nowrap ${
+              className={`text-sm px-3 py-1 rounded transition-colors whitespace-nowrap flex-shrink-0 ${
                 i === 0
                   ? "bg-[#FF0036] text-white"
                   : "text-gray-600 hover:text-[#FF0036] hover:bg-red-50"
@@ -90,14 +90,14 @@ export function ListingPage({
               {opt}
             </button>
           ))}
-          <span className="ml-auto text-xs text-gray-400 flex-shrink-0">
+          <span className="ml-auto text-xs text-gray-400 flex-shrink-0 pl-2">
             {products.length} ürün bulundu
           </span>
         </div>
 
         {/* Ürün grid */}
         {products.length > 0 ? (
-          <div className="grid grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {products.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

@@ -60,7 +60,7 @@ export default async function BrandPage({ params, searchParams }: Props) {
         </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-0 pb-8">
+      <div className="max-w-[1200px] mx-auto px-4 pb-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-4 px-1">
           <a href="/" className="hover:text-[#FF0036] transition-colors">
@@ -111,13 +111,13 @@ export default async function BrandPage({ params, searchParams }: Props) {
         )}
 
         {/* Sıralama çubuğu */}
-        <div className="bg-white rounded-lg border border-gray-100 px-4 py-3 flex items-center gap-3 mb-4">
-          <span className="text-sm text-gray-500 mr-2">Sırala:</span>
+        <div className="bg-white rounded-lg border border-gray-100 px-4 py-3 flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar">
+          <span className="text-sm text-gray-500 flex-shrink-0">Sırala:</span>
           {["Önerilen", "En Çok Satan", "En Düşük Fiyat", "En Yüksek Fiyat"].map(
             (opt, i) => (
               <button
                 key={opt}
-                className={`text-sm px-3 py-1 rounded transition-colors ${
+                className={`text-sm px-3 py-1 rounded transition-colors whitespace-nowrap flex-shrink-0 ${
                   i === 0
                     ? "bg-[#FF0036] text-white"
                     : "text-gray-600 hover:text-[#FF0036] hover:bg-red-50"
@@ -127,13 +127,13 @@ export default async function BrandPage({ params, searchParams }: Props) {
               </button>
             )
           )}
-          <span className="ml-auto text-xs text-gray-400">
+          <span className="ml-auto text-xs text-gray-400 flex-shrink-0 pl-2">
             {products.length} ürün
           </span>
         </div>
 
         {products.length > 0 ? (
-          <div className="grid grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {products.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

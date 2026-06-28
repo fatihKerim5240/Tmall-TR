@@ -164,10 +164,10 @@ export function FeaturedSection() {
   const visible = SHUFFLED.slice(0, visibleCount);
 
   return (
-    <section className="max-w-[1200px] mx-auto mb-6">
+    <section className="max-w-[1200px] mx-auto mb-6 px-4">
       <div className="bg-white rounded-lg overflow-hidden shadow-sm">
         {/* Başlık */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 md:px-5 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <span className="w-1 h-5 bg-[#FF0036] rounded-full block" />
             <h2 className="font-black text-gray-800 text-lg">Sizin İçin Seçtiklerimiz</h2>
@@ -179,7 +179,7 @@ export function FeaturedSection() {
         </div>
 
         {/* Grid */}
-        <div className="p-4 grid grid-cols-4 gap-4">
+        <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
           {visible.map((p) => (
             <FeaturedCard key={p.id} product={p} />
           ))}

@@ -9,10 +9,10 @@ export function MegaMenu() {
 
   return (
     <nav className="bg-white border-b border-gray-200 shadow-sm relative z-40">
-      <div className="max-w-[1200px] mx-auto flex items-center">
-        {/* Tüm Kategoriler Butonu */}
+      <div className="max-w-[1200px] mx-auto flex items-center px-2 md:px-0">
+        {/* Tüm Kategoriler Butonu — masaüstü */}
         <div
-          className="relative group"
+          className="hidden md:block relative group flex-shrink-0"
           onMouseEnter={() => setActiveCategory(NAV_CATEGORIES[0])}
           onMouseLeave={() => setActiveCategory(null)}
         >
@@ -104,7 +104,7 @@ export function MegaMenu() {
         </div>
 
         {/* Hızlı Nav Linkleri */}
-        <div className="flex items-center overflow-x-auto no-scrollbar">
+        <div className="flex items-center overflow-x-auto no-scrollbar flex-1">
           <NavLink href="/flash" icon={<Zap size={13} className="text-[#FF0036]" />} label="Flash İndirim" hot />
           <NavLink href="/yeni" label="Yeni Gelenler" />
           <NavLink href="/markalar" label="Markalar" />
@@ -115,8 +115,8 @@ export function MegaMenu() {
           <NavLink href="/diger" label="Diğer" />
         </div>
 
-        {/* Sağ Taraf */}
-        <div className="ml-auto flex-shrink-0 pl-4">
+        {/* Sağ Taraf — masaüstü */}
+        <div className="hidden md:flex ml-auto flex-shrink-0 pl-4">
           <a href="/app-download" className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-[#FF0036] transition-colors">
             <span className="text-base">📱</span>
             <span>Uygulamayı İndir</span>

@@ -29,8 +29,8 @@ const BANNERS = [
 
 export function CategoryBanners() {
   return (
-    <section className="max-w-[1200px] mx-auto mb-4">
-      <div className="grid grid-cols-3 gap-3">
+    <section className="max-w-[1200px] mx-auto mb-4 px-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {BANNERS.map((b) => (
           <a
             key={b.id}

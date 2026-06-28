@@ -14,11 +14,15 @@
   padding: 0;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   background-color: #F5F5F5;
   font-family: "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif;
   color: #333;
-  min-width: 1200px;
+  overflow-x: hidden;
 }
 
 /* Scrollbar */
