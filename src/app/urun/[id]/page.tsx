@@ -1,11 +1,12 @@
 "use client";
-import { use, useState, useEffect, useRef } from "react";
+import { use, useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import useEmblaCarousel from "embla-carousel-react";
 import {
-  Star, ShoppingCart, Heart, Share2, ChevronRight, Shield,
+  Star, ShoppingCart, Heart, ChevronRight, Shield,
   Truck, RotateCcw, Plus, Minus, Check, Store, ChevronLeft,
-  ZoomIn, Package, Tag, Award,
+  ZoomIn, Package, Tag, Award, MessageCircle,
 } from "lucide-react";
 import { PageWrapper } from "@/components/shared/PageWrapper";
 import { ProductCard } from "@/components/shared/ProductCard";
@@ -13,42 +14,26 @@ import { getProductById, getRelatedProducts, ALL_PRODUCTS } from "@/lib/products
 import { FLASH_PRODUCTS, FEATURED_PRODUCTS } from "@/lib/data";
 import { useCartStore } from "@/store/useCartStore";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
+import { ReviewSection } from "@/components/pdp/ReviewSection";
+import { QASection } from "@/components/pdp/QASection";
+import { ShareButton } from "@/components/pdp/ShareButton";
+import { QA_COUNT } from "@/lib/pdp-mock";
+import { Product } from "@/types";
 
 const ALL_KNOWN = [...ALL_PRODUCTS, ...FLASH_PRODUCTS, ...FEATURED_PRODUCTS];
 
 interface Props { params: Promise<{ id: string }> }
 
-export default function ProductDetailPage({ params }: Props) {
-  const { id } = use(params);
-  let product = getProductById(id);
-  if (!product) product = ALL_KNOWN.find((p) => p.id === id);
-
-  if (!product) {
-    return (
-      <PageWrapper>
-        <div className="max-w-[1200px] mx-auto py-20 text-center">
-          <div className="text-6xl mb-4">🔍</div>
-          <h2 className="text-xl font-bold text-gray-700 mb-2">Ürün Bulunamadı</h2>
-          <p className="text-gray-400 mb-6">Aradığınız ürün mevcut değil veya kaldırılmış olabilir.</p>
-          <Link href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF0036] text-white rounded-lg text-sm font-semibold hover:bg-[#CC0029] transition-colors">
-            Alışverişe Devam Et
-          </Link>
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  const related = getRelatedProducts(product, 5);
-  const images = product.images ?? [product.image, product.image, product.image];
-
-  return (
-    <PageWrapper>
-      <PDPContent product={product} images={images} related={related} />
-    </PageWrapper>
-  );
+function getCrossSellProducts(product: Product, limit = 8): Product[] {
+  return ALL_PRODUCTS
+    .filter((p) => p.id !== product.id && p.category !== product.category)
+    .sort((a, b) => (b.sold ?? 0) - (a.sold ?? 0))
+    .slice(0, limit);
 }
 
-/* ── Görsel Zoom bileşeni ── */
+/* ─────────────────────────────────────────────────────────────
+   ZoomImage
+───────────────────────────────────────────────────────────── */
 function ZoomImage({ src, alt }: { src: string; alt: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoomed, setZoomed] = useState(false);
@@ -56,9 +41,10 @@ function ZoomImage({ src, alt }: { src: string; alt: string }) {
 
   const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setOrigin({ x, y });
+    setOrigin({
+      x: ((e.clientX - rect.left) / rect.width) * 100,
+      y: ((e.clientY - rect.top) / rect.height) * 100,
+    });
   };
 
   return (
@@ -71,9 +57,7 @@ function ZoomImage({ src, alt }: { src: string; alt: string }) {
     >
       <div
         style={{
-          width: "100%",
-          height: "100%",
-          position: "relative",
+          width: "100%", height: "100%", position: "relative",
           transform: zoomed ? "scale(2.4)" : "scale(1)",
           transformOrigin: `${origin.x}% ${origin.y}%`,
           transition: zoomed ? "transform-origin 0.05s linear" : "transform 0.25s ease",
@@ -91,7 +75,9 @@ function ZoomImage({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-/* ── Renk varyant eşleşmesi ── */
+/* ─────────────────────────────────────────────────────────────
+   Color map & helpers
+───────────────────────────────────────────────────────────── */
 const COLOR_MAP: Record<string, string> = {
   siyah: "#1a1a1a", beyaz: "#f5f5f5", kırmızı: "#FF0036", mavi: "#2563eb",
   lacivert: "#1e3a8a", yeşil: "#16a34a", sarı: "#eab308", turuncu: "#f97316",
@@ -108,7 +94,6 @@ function getColorHex(option: string): string | null {
   return null;
 }
 
-/* ── Teknik özellikler üretici ── */
 function generateSpecs(p: ReturnType<typeof getProductById>): Array<{ label: string; value: string }> {
   if (!p) return [];
   const specs: Array<{ label: string; value: string }> = [];
@@ -122,13 +107,76 @@ function generateSpecs(p: ReturnType<typeof getProductById>): Array<{ label: str
   return specs;
 }
 
-/* ── PDPContent ── */
+/* ─────────────────────────────────────────────────────────────
+   ProductsCarousel — embla-powered
+───────────────────────────────────────────────────────────── */
+function ProductsCarousel({ products, title, accent = false }: { products: Product[]; title: string; accent?: boolean }) {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false, align: "start", dragFree: true });
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(true);
+
+  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const update = () => {
+      setCanPrev(emblaApi.canScrollPrev());
+      setCanNext(emblaApi.canScrollNext());
+    };
+    emblaApi.on("select", update);
+    update();
+  }, [emblaApi]);
+
+  if (!products.length) return null;
+
+  return (
+    <section className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className={`w-1 h-5 rounded-full block ${accent ? "bg-[#FF6600]" : "bg-[#FF0036]"}`} />
+          <h2 className="font-black text-gray-800">{title}</h2>
+        </div>
+        <div className="flex gap-1.5">
+          <button
+            onClick={scrollPrev}
+            disabled={!canPrev}
+            className="w-7 h-7 border border-gray-200 rounded-full flex items-center justify-center hover:border-[#FF0036] hover:text-[#FF0036] disabled:opacity-30 disabled:cursor-default transition-colors"
+          >
+            <ChevronLeft size={13} />
+          </button>
+          <button
+            onClick={scrollNext}
+            disabled={!canNext}
+            className="w-7 h-7 border border-gray-200 rounded-full flex items-center justify-center hover:border-[#FF0036] hover:text-[#FF0036] disabled:opacity-30 disabled:cursor-default transition-colors"
+          >
+            <ChevronRight size={13} />
+          </button>
+        </div>
+      </div>
+      <div className="overflow-hidden" ref={emblaRef}>
+        <div className="flex gap-3">
+          {products.map((rp) => (
+            <div key={rp.id} className="flex-none w-44 sm:w-48">
+              <ProductCard product={rp} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PDPContent
+───────────────────────────────────────────────────────────── */
 function PDPContent({
-  product: p, images, related,
+  product: p, images, related, crossSell,
 }: {
   product: NonNullable<ReturnType<typeof getProductById>>;
   images: string[];
   related: ReturnType<typeof getRelatedProducts>;
+  crossSell: Product[];
 }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -151,14 +199,12 @@ function PDPContent({
   };
 
   const specs = generateSpecs(p);
-  const savings = p.originalPrice && p.discount
-    ? p.originalPrice - p.price
-    : null;
+  const savings = p.originalPrice && p.discount ? p.originalPrice - p.price : null;
 
   return (
-    <div className="max-w-[1200px] mx-auto py-4 px-4">
+    <div className="max-w-[1200px] mx-auto py-4 px-4 space-y-4">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-4">
+      <nav className="flex items-center gap-1.5 text-xs text-gray-400">
         <Link href="/" className="hover:text-[#FF0036] transition-colors">Anasayfa</Link>
         <ChevronRight size={12} />
         {p.category && (
@@ -173,23 +219,22 @@ function PDPContent({
       </nav>
 
       {/* ── Ana panel ── */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-6 mb-4 shadow-sm">
+      <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-6 shadow-sm">
         <div className="flex flex-col lg:grid lg:grid-cols-[300px,1fr,280px] gap-6 lg:gap-8">
 
           {/* ── Sol: Görsel galerisi ── */}
           <div>
-            {/* Zoom destekli ana görsel */}
             <ZoomImage src={images[selectedImage] ?? p.image} alt={p.name} />
 
-            {/* Küçük görseller */}
-            <div className="flex gap-2 mt-3">
+            {/* Thumbnail rail */}
+            <div className="flex gap-2 mt-3 flex-wrap">
               {images.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setSelectedImage(i)}
-                  className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${
+                  className={`relative w-[60px] h-[60px] rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${
                     selectedImage === i
-                      ? "border-[#FF0036] shadow-sm"
+                      ? "border-[#FF0036] shadow-sm ring-1 ring-[#FF0036]/30"
                       : "border-gray-200 hover:border-gray-400"
                   }`}
                 >
@@ -198,7 +243,6 @@ function PDPContent({
               ))}
             </div>
 
-            {/* Navigation okları – thumbnail'ların altında */}
             {images.length > 1 && (
               <div className="flex justify-center gap-2 mt-2">
                 <button
@@ -207,9 +251,7 @@ function PDPContent({
                 >
                   <ChevronLeft size={13} />
                 </button>
-                <span className="text-xs text-gray-400 self-center">
-                  {selectedImage + 1} / {images.length}
-                </span>
+                <span className="text-xs text-gray-400 self-center">{selectedImage + 1} / {images.length}</span>
                 <button
                   onClick={() => setSelectedImage((i) => (i + 1) % images.length)}
                   className="w-7 h-7 border border-gray-200 rounded-full flex items-center justify-center hover:border-[#FF0036] hover:text-[#FF0036] transition-colors"
@@ -235,9 +277,9 @@ function PDPContent({
             {/* İsim */}
             <h1 className="text-xl font-bold text-gray-800 leading-snug">{p.name}</h1>
 
-            {/* Rating çubuğu */}
+            {/* Rating + Q&A row */}
             {p.rating !== undefined && (
-              <div className="flex items-center gap-3 py-2 border-y border-gray-100">
+              <div className="flex items-center gap-3 flex-wrap py-2 border-y border-gray-100">
                 <div className="flex items-center gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
@@ -249,10 +291,14 @@ function PDPContent({
                   <span className="text-sm font-bold text-[#FAAD14] ml-1">{p.rating}</span>
                 </div>
                 {p.ratingCount && (
-                  <span className="text-xs text-gray-400 border-l border-gray-200 pl-3">
+                  <a href="#reviews" className="text-xs text-gray-400 hover:text-[#FF0036] border-l border-gray-200 pl-3 transition-colors">
                     {p.ratingCount.toLocaleString("tr-TR")} değerlendirme
-                  </span>
+                  </a>
                 )}
+                <a href="#qa" className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#FF0036] border-l border-gray-200 pl-3 transition-colors">
+                  <MessageCircle size={11} />
+                  {QA_COUNT} Soru-Cevap
+                </a>
                 {p.sold !== undefined && (
                   <span className="text-xs text-gray-400 border-l border-gray-200 pl-3">
                     {p.sold.toLocaleString("tr-TR")} satış
@@ -263,7 +309,7 @@ function PDPContent({
 
             {/* Fiyat kutusu */}
             <div className="bg-gradient-to-r from-[#FFF5F5] to-[#FFF8F0] rounded-xl p-4">
-              <div className="flex items-baseline gap-3">
+              <div className="flex items-baseline gap-3 flex-wrap">
                 <span className="text-3xl font-black text-[#FF0036]">
                   {p.price.toLocaleString("tr-TR")}₺
                 </span>
@@ -301,9 +347,7 @@ function PDPContent({
                     {variant.options.map((opt) => {
                       const colorHex = isColor ? getColorHex(opt) : null;
                       const selected = selectedVariants[variant.name] === opt;
-
                       return colorHex ? (
-                        /* Renk yuvarlak buton */
                         <button
                           key={opt}
                           title={opt}
@@ -320,7 +364,6 @@ function PDPContent({
                           )}
                         </button>
                       ) : (
-                        /* Normal metin butonu */
                         <button
                           key={opt}
                           onClick={() => setSelectedVariants((s) => ({ ...s, [variant.name]: opt }))}
@@ -340,7 +383,7 @@ function PDPContent({
               );
             })}
 
-            {/* Açıklama / Teknik Özellikler sekmeleri */}
+            {/* Açıklama / Özellikler sekmeleri */}
             <div className="border border-gray-100 rounded-xl overflow-hidden">
               <div className="flex border-b border-gray-100">
                 {(["desc", "specs"] as const).map((tab) => (
@@ -348,16 +391,13 @@ function PDPContent({
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
-                      activeTab === tab
-                        ? "bg-[#FF0036] text-white"
-                        : "text-gray-500 hover:bg-gray-50"
+                      activeTab === tab ? "bg-[#FF0036] text-white" : "text-gray-500 hover:bg-gray-50"
                     }`}
                   >
                     {tab === "desc" ? "Ürün Hakkında" : "Teknik Özellikler"}
                   </button>
                 ))}
               </div>
-
               <div className="p-4">
                 {activeTab === "desc" ? (
                   <p className="text-sm text-gray-600 leading-relaxed">
@@ -374,9 +414,7 @@ function PDPContent({
                       ))}
                       {specs.length === 0 && (
                         <tr>
-                          <td colSpan={2} className="py-4 text-center text-gray-400 text-xs">
-                            Teknik özellik bilgisi bulunmuyor.
-                          </td>
+                          <td colSpan={2} className="py-4 text-center text-gray-400 text-xs">Teknik özellik bilgisi bulunmuyor.</td>
                         </tr>
                       )}
                     </tbody>
@@ -388,23 +426,16 @@ function PDPContent({
 
           {/* ── Sağ: Satın alma paneli ── */}
           <div className="flex flex-col gap-3">
-            {/* Stok & fiyat kutusu */}
             <div className="bg-white rounded-xl border-2 border-gray-100 p-4 space-y-3">
-              {/* Stok durumu */}
               {p.stock !== undefined && (
                 <div className="flex items-center gap-2 text-sm">
-                  <span
-                    className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                      p.stock > 10 ? "bg-green-500" : p.stock > 0 ? "bg-[#FAAD14]" : "bg-gray-300"
-                    }`}
-                  />
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${p.stock > 10 ? "bg-green-500" : p.stock > 0 ? "bg-[#FAAD14]" : "bg-gray-300"}`} />
                   <span className={p.stock > 10 ? "text-green-600 font-medium" : p.stock > 0 ? "text-orange-500 font-medium" : "text-gray-400"}>
                     {p.stock > 10 ? "Stokta mevcut" : p.stock > 0 ? `Son ${p.stock} ürün!` : "Stok tükendi"}
                   </span>
                 </div>
               )}
 
-              {/* Kargo */}
               <div className="text-xs text-gray-500 flex items-center gap-1.5">
                 <Truck size={12} className="text-green-500" />
                 {p.price >= 750
@@ -412,7 +443,7 @@ function PDPContent({
                   : "Bu üründe kargo ücreti uygulanır"}
               </div>
 
-              {/* Adet seçici */}
+              {/* Adet */}
               <div>
                 <p className="text-xs text-gray-500 mb-2 font-medium">Adet</p>
                 <div className="flex items-center">
@@ -437,7 +468,7 @@ function PDPContent({
                 </div>
               </div>
 
-              {/* Toplam fiyat */}
+              {/* Toplam */}
               <div className="bg-gray-50 rounded-lg px-3 py-2.5 flex items-center justify-between">
                 <span className="text-xs text-gray-500">Toplam</span>
                 <span className="text-xl font-black text-[#FF0036]">
@@ -454,11 +485,7 @@ function PDPContent({
                     : "bg-[#FF0036] hover:bg-[#CC0029] active:bg-[#AA0020] text-white"
                 }`}
               >
-                {addedToCart ? (
-                  <><Check size={18} /> Sepete Eklendi!</>
-                ) : (
-                  <><ShoppingCart size={18} /> Sepete Ekle</>
-                )}
+                {addedToCart ? <><Check size={18} /> Sepete Eklendi!</> : <><ShoppingCart size={18} /> Sepete Ekle</>}
               </button>
 
               {/* Hemen Satın Al */}
@@ -485,7 +512,7 @@ function PDPContent({
               </button>
             </div>
 
-            {/* Teslimat & güven */}
+            {/* Teslimat & güven kartları */}
             <div className="bg-gray-50 rounded-xl p-4 space-y-3">
               {[
                 { icon: <Truck size={14} className="text-green-500 flex-shrink-0" />, text: "Ücretsiz kargo", sub: "750₺ üzeri siparişlerde" },
@@ -503,29 +530,68 @@ function PDPContent({
               ))}
             </div>
 
-            {/* Paylaş */}
-            <button className="w-full py-2 flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors">
-              <Share2 size={12} />
-              Ürünü Paylaş
-            </button>
+            {/* Paylaş — Web Share API */}
+            <ShareButton productName={p.name} price={p.price} />
           </div>
         </div>
       </div>
 
+      {/* ── Değerlendirmeler ── */}
+      {p.rating !== undefined && p.ratingCount !== undefined && (
+        <ReviewSection
+          productId={p.id}
+          shopName={p.shop}
+          rating={p.rating}
+          ratingCount={p.ratingCount}
+        />
+      )}
+
+      {/* ── Soru & Cevap ── */}
+      <QASection productId={p.id} shopName={p.shop} />
+
+      {/* ── Bu Ürünü Alanlar Bunları da Aldı ── */}
+      {crossSell.length > 0 && (
+        <ProductsCarousel products={crossSell} title="Bu Ürünü Alanlar Bunları da Aldı" accent />
+      )}
+
       {/* ── Benzer Ürünler ── */}
       {related.length > 0 && (
-        <section className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="w-1 h-5 bg-[#FF0036] rounded-full block" />
-            <h2 className="font-black text-gray-800">Benzer Ürünler</h2>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {related.map((rp) => (
-              <ProductCard key={rp.id} product={rp} />
-            ))}
-          </div>
-        </section>
+        <ProductsCarousel products={related} title="Benzer Ürünler" />
       )}
     </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Page export
+───────────────────────────────────────────────────────────── */
+export default function ProductDetailPage({ params }: Props) {
+  const { id } = use(params);
+  let product = getProductById(id);
+  if (!product) product = ALL_KNOWN.find((p) => p.id === id);
+
+  if (!product) {
+    return (
+      <PageWrapper>
+        <div className="max-w-[1200px] mx-auto py-20 text-center">
+          <div className="text-6xl mb-4">🔍</div>
+          <h2 className="text-xl font-bold text-gray-700 mb-2">Ürün Bulunamadı</h2>
+          <p className="text-gray-400 mb-6">Aradığınız ürün mevcut değil veya kaldırılmış olabilir.</p>
+          <Link href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-[#FF0036] text-white rounded-lg text-sm font-semibold hover:bg-[#CC0029] transition-colors">
+            Alışverişe Devam Et
+          </Link>
+        </div>
+      </PageWrapper>
+    );
+  }
+
+  const related = getRelatedProducts(product, 8);
+  const crossSell = getCrossSellProducts(product, 8);
+  const images = product.images ?? [product.image, product.image, product.image];
+
+  return (
+    <PageWrapper>
+      <PDPContent product={product} images={images} related={related} crossSell={crossSell} />
+    </PageWrapper>
   );
 }
