@@ -2,7 +2,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Camera, X, Upload, ImageIcon, AlertCircle, Package, Search } from "lucide-react";
 
-const MAX_MB = 2;
+const MAX_MB = 10;
 const MAX_BYTES = MAX_MB * 1024 * 1024;
 
 type Phase =
